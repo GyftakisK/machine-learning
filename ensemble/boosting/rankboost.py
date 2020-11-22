@@ -12,7 +12,7 @@ import numpy as np
 # it makes it easier for the learning method :P
 
 class RankBoost(BaseEstimator, ClassifierMixin):
-    def __init__(self, T, base_estimator=None):
+    def __init__(self, T=50, base_estimator=None):
         if base_estimator is None:
             base_estimator = DecisionTreeClassifier(max_depth=1)
         self.estimator = base_estimator
