@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.svm import LinearSVC
+from sklearn.exceptions import NotFittedError
 import numpy as np
 
 
@@ -27,23 +28,27 @@ def preprocess(X, y):
     return X1-X2, yy, ww
 
 
-def LinearSVM():
-    return LinearSVC(fit_intercept=False, penalty='l1', tol=1e-3, dual=False)
+def LinearSVM(C, random_state):
+    return LinearSVC(C=C, fit_intercept=False, penalty='l1', tol=1e-3, dual=False, random_state=random_state)
 
 
 class RankSVM(BaseEstimator, RegressorMixin):
-    def __init__(self, estimator=None):
-        self.estimator = estimator
-        if estimator is None:
-            self.estimator = LinearSVM()
+    def __init__(self, C=1.0, random_state=None):
+        self.C = C
+        self.random_state=random_state
+        self.coefs = None
+        self._fitted = False
 
     def fit(self, X, y):
         self.classes_ = np.unique(y)  # required by sklearn
-
-        dX, dy = preprocess(X, y)
-        self.model.fit(dX, dy)
-        self.coefs = self.model.coef_[0]
+        estimator = LinearSVM(self.C, self.random_state)
+        dX, dy, _ = preprocess(X, y)
+        estimator.fit(dX, dy)
+        self.coefs = estimator.coef_[0]
+        self._fitted = True
         return self
 
     def predict(self, X):
+        if not self._fitted:
+            raise NotFittedError
         return np.sum(self.coefs * X, 1)
